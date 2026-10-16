@@ -141,22 +141,24 @@ function renderAll(filterTitle = '') {
         [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
       }
 
-            quotes.forEach(q => {
+                  quotes.forEach(q => {
         const li = document.createElement('li');
         li.className = 'quote-card';
         const author = authorMap[q.bookTitle] || 'Неизвестен';
 
-        // ✅ ИСПРАВЛЕНИЕ: \${...} -> \${...}
+        // ✅ ИСПРАВЛЕНИЕ: Используем чистый синтаксис шаблонных строк
         li.innerHTML = `
           <div class="quote-content">
             <p class="quote-text">\${escapeHtml(q.text)}</p>
             <div class="book-info">${q.bookTitle} — ${author}</div>
           </div>
+          <!-- data-id теперь будет содержать реальное число -->
           <button type="button" class="edit-btn" data-id="\${q.id}">✏️ Редактировать</button>
         `;
 
         listEl.appendChild(li);
       });
+
 
     });
   });
