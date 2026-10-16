@@ -1,5 +1,5 @@
 const DB_NAME = 'QuotesDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db;
 let booksCache = []; // кэш книг для быстрого поиска автора
 
@@ -166,76 +166,6 @@ function renderAll(filterTitle = '') {
   });
 }
 
-// --- Настройка слушателей для редактирования ---
-function setupEditListeners() {
-  // Проверка, что DOM элементы существуют
-  if (!modalEl || !formEl || !quoteTextInput || !bookTitleInput || !authorNameInput) {
-    console.warn('Элементы модального окна ещё не загружены в DOM');
-    return;
-  }
-
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.edit-btn');
-    if (!btn) return;
-
-    const idAttr = btn.getAttribute('data-id');
-
-    // 1. Проверка наличия атрибута
-    if (!idAttr) {
-      console.error('Ошибка: у кнопки редактирования отсутствует атрибут data-id');
-      alert('Техническая ошибка: кнопка редактирования не имеет ID');
-      return;
-    }
-
-    // 2. Проверка валидности числа
-    const quoteId = Number(idAttr);
-    if (Number.isNaN(quoteId)) {
-      console.error('Ошибка: data-id не является числом. Получено:', idAttr);
-      alert('Техническая ошибка: некорректный ID цитаты');
-      return;
-    }
-
-    // 3. Проверка инициализации БД
-    if (!db) {
-      console.error('Ошибка: база данных ещё не готова. Попробуйте обновить страницу.');
-      alert('База данных загружается... подождите пару секунд и попробуйте снова.');
-      return;
-    }
-
-    // Запрос к базе
-    const tx = db.transaction('quotes', 'readonly');
-    const req = tx.objectStore('quotes').get(quoteId);
-
-    req.onsuccess = () => {
-      const quote = req.result;
-      if (!quote) {
-        console.error('Цитата с ID', quoteId, 'не найдена в базе');
-        alert('Цитата была удалена или не найдена');
-        return;
-      }
-      
-
-      // Заполняем форму
-      quoteTextInput.value = quote.text;
-      bookTitleInput.value = quote.bookTitle;
-      
-      // Автоматически подставляем автора из кэша книг
-      const book = booksCache.find(b => b.title === quote.bookTitle);
-      authorNameInput.value = book ? book.author : '';
-
-      // Сохраняем ID для режима редактирования
-      formEl.dataset.editId = quote.id;
-
-      // Открываем модалку
-      modalEl.classList.remove('hidden');
-    };
-
-    req.onerror = (err) => {
-      console.error('Ошибка при получении цитаты для редактирования:', err);
-      alert('Не удалось загрузить цитату для редактирования');
-    };
-  });
-}
 
 // --- Логика модального окна (Добавить) ---
 if (addBtn) {
