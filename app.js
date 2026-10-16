@@ -1,5 +1,5 @@
 const DB_NAME = 'QuotesDB';
-const DB_VERSION = 2;
+const DB_VERSION = 1;
 let db;
 let booksCache = []; // кэш книг для быстрого поиска автора
 
