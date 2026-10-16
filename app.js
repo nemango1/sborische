@@ -36,8 +36,7 @@ function initDB() {
     console.log('База данных успешно открыта');
     
     renderAll();
-    // ВАЖНО: слушатель вешаем только после того, как db инициализирована
-    setupEditListeners(); 
+    
   };
 
   request.onerror = (e) => console.error('Ошибка БД:', e.target.error);
