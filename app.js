@@ -3,18 +3,28 @@ const DB_VERSION = 1;
 let db;
 let booksCache = []; // кэш книг для быстрого поиска автора
 
+// --- Элементы DOM (объявляем заранее, но используем после проверки) ---
+const modalEl = document.getElementById('modal');
+const addBtn = document.getElementById('add-btn');
+const closeBtn = document.getElementById('close-modal');
+const formEl = document.getElementById('add-quote-form');
+const quoteTextInput = document.getElementById('quote-text');
+const bookTitleInput = document.getElementById('book-title');
+const authorNameInput = document.getElementById('author-name');
+const filterEl = document.getElementById('book-filter');
+
 // Инициализация БД
 function initDB() {
   const request = indexedDB.open(DB_NAME, DB_VERSION);
 
   request.onupgradeneeded = (e) => {
     const dbNew = e.target.result;
-    // Хранилище книг: ключ по названию (уникальное)
+    
     if (!dbNew.objectStoreNames.contains('books')) {
       const booksStore = dbNew.createObjectStore('books', { keyPath: 'title' });
       booksStore.createIndex('author', 'author', { unique: false });
     }
-    // Хранилище цитат: ключ — автоинкремент
+    
     if (!dbNew.objectStoreNames.contains('quotes')) {
       const quotesStore = dbNew.createObjectStore('quotes', { autoIncrement: true });
       quotesStore.createIndex('bookTitle', 'bookTitle', { unique: false });
@@ -23,7 +33,11 @@ function initDB() {
 
   request.onsuccess = (e) => {
     db = e.target.result;
+    console.log('База данных успешно открыта');
+    
     renderAll();
+    // ВАЖНО: слушатель вешаем только после того, как db инициализирована
+    setupEditListeners(); 
   };
 
   request.onerror = (e) => console.error('Ошибка БД:', e.target.error);
@@ -32,38 +46,38 @@ function initDB() {
 // Добавление или обновление книги + цитаты
 async function saveQuoteData(text, title, author, quoteIdToUpdate = null) {
   return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('База данных не инициализирована'));
+      return;
+    }
+
     const tx = db.transaction(['books', 'quotes'], 'readwrite');
     const booksStore = tx.objectStore('books');
     const quotesStore = tx.objectStore('quotes');
 
-    // 1. Сначала работаем с книгой
     const getBookReq = booksStore.get(title);
+    
     getBookReq.onsuccess = () => {
       let bookRecord = getBookReq.result;
       
-      // Если книги нет — создаём. Если есть — можно обновить автора, если он отличается
       if (!bookRecord) {
         bookRecord = { title, author };
         const putBookReq = booksStore.put(bookRecord);
         putBookReq.onerror = reject;
       } else if (bookRecord.author !== author) {
-        // Если автор отличается — обновляем запись книги
         bookRecord.author = author;
         const putBookReq = booksStore.put(bookRecord);
         putBookReq.onerror = reject;
       }
       
-      // 2. Теперь цитата
       const quoteData = { text, bookTitle: title };
       
       if (quoteIdToUpdate !== null) {
-        // РЕДАКТИРОВАНИЕ существующей цитаты
         quoteData.id = quoteIdToUpdate;
         const putQuoteReq = quotesStore.put(quoteData);
         putQuoteReq.onsuccess = resolve;
         putQuoteReq.onerror = reject;
       } else {
-        // ДОБАВЛЕНИЕ новой цитаты
         const addQuoteReq = quotesStore.add(quoteData);
         addQuoteReq.onsuccess = resolve;
         addQuoteReq.onerror = reject;
@@ -74,8 +88,8 @@ async function saveQuoteData(text, title, author, quoteIdToUpdate = null) {
   });
 }
 
-// Получение всех книг для фильтра
 function getBooks(cb) {
+  if (!db) return cb();
   const tx = db.transaction('books', 'readonly');
   const store = tx.objectStore('books');
   const req = store.getAll();
@@ -83,8 +97,8 @@ function getBooks(cb) {
   req.onerror = (e) => console.error(e);
 }
 
-// Получение цитат (с фильтром)
 function getQuotes(filterTitle, cb) {
+  if (!db) return cb();
   const tx = db.transaction('quotes', 'readonly');
   const store = tx.objectStore('quotes');
   const req = store.getAll();
@@ -98,29 +112,30 @@ function getQuotes(filterTitle, cb) {
   req.onerror = (e) => console.error(e);
 }
 
-// Рендер списка цитат и фильтра
 function renderAll(filterTitle = '') {
   getBooks(books => {
-    booksCache = books; // обновляем кэш
+    booksCache = books;
 
-    const filterEl = document.getElementById('book-filter');
-    filterEl.innerHTML = '<option value="">Все произведения</option>';
-    books.forEach(b => {
-      const opt = document.createElement('option');
-      opt.value = b.title;
-      opt.textContent = `${b.title} (${b.author})`;
-      filterEl.appendChild(opt);
-    });
+    if (filterEl) {
+      filterEl.innerHTML = '<option value="">Все произведения</option>';
+      books.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.title;
+        opt.textContent = `${b.title} (${b.author})`;
+        filterEl.appendChild(opt);
+      });
+    }
 
     getQuotes(filterTitle, quotes => {
       const listEl = document.getElementById('quotes-list');
+      if (!listEl) return;
+      
       listEl.innerHTML = '';
 
-      // Быстрый словарь: title -> author
       const authorMap = {};
       books.forEach(b => authorMap[b.title] = b.author);
 
-      // Перемешиваем цитаты (опционально)
+      // Перемешивание (Shuffle)
       for (let i = quotes.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
@@ -133,11 +148,10 @@ function renderAll(filterTitle = '') {
 
         li.innerHTML = `
           <div class="quote-content">
-            <p class="quote-text">${escapeHtml(q.text)}</p>
+            <p class="quote-text">\${escapeHtml(q.text)}</p>
             <div class="book-info">${q.bookTitle} — ${author}</div>
           </div>
-
-          <button type="button" class="edit-btn" data-id="${q.id}">✏️ Редактировать</button>
+          <button type="button" class="edit-btn" data-id="\${q.id}">✏️ Редактировать</button>
         `;
 
         listEl.appendChild(li);
@@ -146,101 +160,136 @@ function renderAll(filterTitle = '') {
   });
 }
 
-// --- Модалка и логика кнопок ---
-
-const modal = document.getElementById('modal');
-const addBtn = document.getElementById('add-btn');
-const closeBtn = document.getElementById('close-modal');
-const form = document.getElementById('add-quote-form');
-const quoteTextInput = document.getElementById('quote-text');
-const bookTitleInput = document.getElementById('book-title');
-const authorNameInput = document.getElementById('author-name');
-
-// Открытие модалки «Добавить»
-addBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  // Сброс режима редактирования при открытии «Добавить»
-  delete form.dataset.editId;
-  quoteTextInput.value = '';
-  bookTitleInput.value = '';
-  authorNameInput.value = '';
-  modal.classList.remove('hidden');
-});
-
-// Закрытие модалки
-closeBtn.addEventListener('click', () => {
-  modal.classList.add('hidden');
-  delete form.dataset.editId; // сброс режима редактирования
-  // Опционально: можно не очищать форму, если хочешь сохранять черновик
-});
-
-// Обработка формы (Добавить / Редактировать)
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const text = quoteTextInput.value.trim();
-  const title = bookTitleInput.value.trim();
-  const author = authorNameInput.value.trim();
-
-  if (!text || !title) {
-    alert('Заполните текст цитаты и название произведения');
+// --- Настройка слушателей для редактирования ---
+function setupEditListeners() {
+  // Проверка, что DOM элементы существуют
+  if (!modalEl || !formEl || !quoteTextInput || !bookTitleInput || !authorNameInput) {
+    console.warn('Элементы модального окна ещё не загружены в DOM');
     return;
   }
 
-  const editId = form.dataset.editId ? Number(form.dataset.editId) : null;
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.edit-btn');
+    if (!btn) return;
 
-  try {
-    await saveQuoteData(text, title, author, editId);
-    modal.classList.add('hidden');
-    
-    // Если редактировали — сбрасываем ID
-    if (editId) {
-      delete form.dataset.editId;
-    } else {
-      form.reset(); // очищаем только при добавлении новой
+    const idAttr = btn.getAttribute('data-id');
+
+    // 1. Проверка наличия атрибута
+    if (!idAttr) {
+      console.error('Ошибка: у кнопки редактирования отсутствует атрибут data-id');
+      alert('Техническая ошибка: кнопка редактирования не имеет ID');
+      return;
     }
 
-    renderAll(); // перерисовываем всё (фильтр и список)
-  } catch (err) {
-    console.error(err);
-    alert('Ошибка при сохранении');
-  }
-});
+    // 2. Проверка валидности числа
+    const quoteId = Number(idAttr);
+    if (Number.isNaN(quoteId)) {
+      console.error('Ошибка: data-id не является числом. Получено:', idAttr);
+      alert('Техническая ошибка: некорректный ID цитаты');
+      return;
+    }
 
-// Глобальный слушатель для кнопок «Редактировать» в карточках
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.edit-btn');
-  if (!btn) return;
+    // 3. Проверка инициализации БД
+    if (!db) {
+      console.error('Ошибка: база данных ещё не готова. Попробуйте обновить страницу.');
+      alert('База данных загружается... подождите пару секунд и попробуйте снова.');
+      return;
+    }
 
-  const quoteId = Number(btn.getAttribute('data-id'));
-  const tx = db.transaction('quotes', 'readonly');
-  const req = tx.objectStore('quotes').get(quoteId);
+    // Запрос к базе
+    const tx = db.transaction('quotes', 'readonly');
+    const req = tx.objectStore('quotes').get(quoteId);
 
-  req.onsuccess = () => {
-    const quote = req.result;
-    if (!quote) return;
+    req.onsuccess = () => {
+      const quote = req.result;
+      if (!quote) {
+        console.error('Цитата с ID', quoteId, 'не найдена в базе');
+        alert('Цитата была удалена или не найдена');
+        return;
+      }
 
-    // Заполняем форму данными
-    quoteTextInput.value = quote.text;
-    bookTitleInput.value = quote.bookTitle;
-    authorNameInput.value = ''; // автора берём из книги, но можно оставить пустым или подтянуть
+      // Заполняем форму
+      quoteTextInput.value = quote.text;
+      bookTitleInput.value = quote.bookTitle;
+      
+      // Автоматически подставляем автора из кэша книг
+      const book = booksCache.find(b => b.title === quote.bookTitle);
+      authorNameInput.value = book ? book.author : '';
 
-    // Сохраняем ID для режима редактирования
-    form.dataset.editId = quote.id;
+      // Сохраняем ID для режима редактирования
+      formEl.dataset.editId = quote.id;
 
-    // Открываем модалку
-    modal.classList.remove('hidden');
-  };
+      // Открываем модалку
+      modalEl.classList.remove('hidden');
+    };
 
-  req.onerror = (err) => console.error(err);
-});
+    req.onerror = (err) => {
+      console.error('Ошибка при получении цитаты для редактирования:', err);
+      alert('Не удалось загрузить цитату для редактирования');
+    };
+  });
+}
 
-// Фильтр
-document.getElementById('book-filter').addEventListener('change', (e) => {
-  renderAll(e.target.value);
-});
+// --- Логика модального окна (Добавить) ---
+if (addBtn) {
+  addBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    delete formEl.dataset.editId;
+    quoteTextInput.value = '';
+    bookTitleInput.value = '';
+    authorNameInput.value = '';
+    if (modalEl) modalEl.classList.remove('hidden');
+  });
+}
 
-// Экранирование HTML (защита от XSS)
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => {
+    if (modalEl) modalEl.classList.add('hidden');
+    delete formEl.dataset.editId;
+  });
+}
+
+if (formEl) {
+  formEl.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const text = quoteTextInput.value.trim();
+    const title = bookTitleInput.value.trim();
+    const author = authorNameInput.value.trim();
+
+    if (!text || !title) {
+      alert('Заполните текст цитаты и название произведения');
+      return;
+    }
+
+    const editId = formEl.dataset.editId ? Number(formEl.dataset.editId) : null;
+
+    try {
+      await saveQuoteData(text, title, author, editId);
+      
+      if (modalEl) modalEl.classList.add('hidden');
+      
+      if (editId) {
+        delete formEl.dataset.editId;
+      } else {
+        formEl.reset();
+      }
+
+      renderAll();
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при сохранении: ' + err.message);
+    }
+  });
+}
+
+// Слушатель фильтра
+if (filterEl) {
+  filterEl.addEventListener('change', (e) => {
+    renderAll(e.target.value);
+  });
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return str
