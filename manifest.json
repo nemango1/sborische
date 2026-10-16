@@ -1,0 +1,20 @@
+{
+  "name": "Мои цитаты",
+  "short_name": "Цитаты",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E8F5E9",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-highres.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

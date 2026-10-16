@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Мои цитаты</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4CAF50" />
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Цитаты">
+  </head>
+  <body>
+    <header>
+      <h1>𓂃˖˳·˖ ִֶָ ⋆Сборище⋆ ִֶָ˖·˳˖𓂃 ִֶָ</h1>
+      <h2>꧁ঔৣ☬Сборник любимых цитат☬ঔৣ꧂</h2>
+    </header>
+
+    <main>
+      
+      <div class="controls-wrapper">
+        <div class="controls">
+          <label for="book-filter" class="filter-label">Фильтр по произведениям:</label>
+          <select id="book-filter">
+            <option value="">Все произведения</option>
+            
+          </select>
+
+          <div class="actions-group">
+           
+            <a href="#" id="add-btn" class="btn-add">+ Добавить цитату</a>
+          </div>
+        </div>
+      </div>
+
+      
+      <ul id="quotes-list" class="quotes-grid"></ul>
+    </main>
+
+    
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Добавить цитату</h2>
+        <form id="add-quote-form">
+          <textarea id="quote-text" placeholder="Текст цитаты" required></textarea>
+          <input id="book-title" type="text" placeholder="Название произведения" required />
+          <input id="author-name" type="text" placeholder="Автор" required />
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button type="submit" class="btn-save">Сохранить</button>
+            <button type="button" id="close-modal" class="btn-cancel">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW зарегистрирован:', reg))
+          .catch(err => console.error('Ошибка регистрации SW:', err));
+      }
+    </script>
+  </body>
+</html>
