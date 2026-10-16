@@ -146,7 +146,6 @@ function renderAll(filterTitle = '') {
         const li = document.createElement('li');
         li.className = 'quote-card';
         const author = authorMap[q.bookTitle] || 'Неизвестен';
-console.log('🎨 Рисуем цитату с ID:', quote.id, '| Текст:', quote.text.substring(0, 20)); //УДАЛИТЬ НАХУЙ
 
         // ✅ ВАЖНО: никаких \ перед $
         li.innerHTML = `
@@ -165,9 +164,7 @@ console.log('🎨 Рисуем цитату с ID:', quote.id, '| Текст:', 
 
     });
   });
-  console.log('🧹 renderAll запущена. Количество цитат для отрисовки:', quotes.length);//УДАЛИТЬ
-console.log('📦 Полный массив цитат:', quotes);//УДАЛИТЬ
-
+  
 }
 
 // --- Настройка слушателей для редактирования ---
