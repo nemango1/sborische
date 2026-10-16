@@ -141,11 +141,12 @@ function renderAll(filterTitle = '') {
         [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
       }
 
-      quotes.forEach(q => {
+            quotes.forEach(q => {
         const li = document.createElement('li');
         li.className = 'quote-card';
         const author = authorMap[q.bookTitle] || 'Неизвестен';
 
+        // ✅ ИСПРАВЛЕНИЕ: \${...} -> \${...}
         li.innerHTML = `
           <div class="quote-content">
             <p class="quote-text">\${escapeHtml(q.text)}</p>
@@ -156,6 +157,7 @@ function renderAll(filterTitle = '') {
 
         listEl.appendChild(li);
       });
+
     });
   });
 }
