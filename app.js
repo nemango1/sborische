@@ -142,23 +142,24 @@ function renderAll(filterTitle = '') {
         [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
       }
 
-                  quotes.forEach(q => {
-        const li = document.createElement('li');
-        li.className = 'quote-card';
-        const author = authorMap[q.bookTitle] || 'Неизвестен';
+                 quotes.forEach(q => {
+  const li = document.createElement('li');
+  li.className = 'quote-card';
+  const author = authorMap[q.bookTitle] || 'Неизвестен';
 
-        // ✅ ИСПРАВЛЕНИЕ: Используем чистый синтаксис шаблонных строк
-        li.innerHTML = `
-          <div class="quote-content">
-            <p class="quote-text">\${escapeHtml(q.text)}</p>
-            <div class="book-info">${q.bookTitle} — ${author}</div>
-          </div>
-          <!-- data-id теперь будет содержать реальное число -->
-          <button type="button" class="edit-btn" data-id="\${q.id}">✏️ Редактировать</button>
-        `;
+  // ✅ ПРАВИЛЬНО: Убрали \ перед \$
+  li.innerHTML = `
+    <div class="quote-content">
+      <p class="quote-text">\${escapeHtml(q.text)}</p>
+      <div class="book-info">${q.bookTitle} — ${author}</div>
+    </div>
+    <!-- data-id теперь реально получит число, например data-id="1" -->
+    <button type="button" class="edit-btn" data-id="\${q.id}">✏️ Редактировать</button>
+  `;
 
-        listEl.appendChild(li);
-      });
+  listEl.appendChild(li);
+});
+
 
 
     });
@@ -212,6 +213,7 @@ function setupEditListeners() {
         alert('Цитата была удалена или не найдена');
         return;
       }
+      
 
       // Заполняем форму
       quoteTextInput.value = quote.text;
