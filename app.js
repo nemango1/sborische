@@ -89,16 +89,16 @@ async function saveQuoteData(text, title, author, quoteIdToUpdate = null) {
 }
 
 function getBooks(cb) {
-  if (!db) return cb();
+  if (!db) return cb(); // ✅ Возвращаем пустой массив, а не undefined
   const tx = db.transaction('books', 'readonly');
   const store = tx.objectStore('books');
   const req = store.getAll();
   req.onsuccess = () => cb(req.result);
-  req.onerror = (e) => console.error(e);
+  req.onerror = (e) => { console.error(e); cb(); };
 }
 
 function getQuotes(filterTitle, cb) {
-  if (!db) return cb();
+  if (!db) return cb(); // ✅ Возвращаем пустой массив
   const tx = db.transaction('quotes', 'readonly');
   const store = tx.objectStore('quotes');
   const req = store.getAll();
@@ -109,8 +109,9 @@ function getQuotes(filterTitle, cb) {
     }
     cb(list);
   };
-  req.onerror = (e) => console.error(e);
+  req.onerror = (e) => { console.error(e); cb(); };
 }
+
 
 function renderAll(filterTitle = '') {
   getBooks(books => {
