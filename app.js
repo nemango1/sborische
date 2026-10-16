@@ -148,7 +148,14 @@ function renderAll(filterTitle = '') {
         const author = authorMap[q.bookTitle] || 'Неизвестен';
 
         // ✅ ВАЖНО: никаких \ перед $
-        
+        li.innerHTML = `
+          <div class="quote-content">
+            <p class="quote-text">${escapeHtml(q.text)}</p>
+            <div class="book-info">${q.bookTitle} — ${author}</div>
+          </div>
+          
+        `;
+
         listEl.appendChild(li);
       });
 
