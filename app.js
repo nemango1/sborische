@@ -1,5 +1,5 @@
 const DB_NAME = 'QuotesDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db;
 let booksCache = []; 
 
