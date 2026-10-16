@@ -1,11 +1,7 @@
-//const DB_NAME = 'QuotesDB';
-//const DB_VERSION = 1;
-//let db;
-//let booksCache = []; // кэш книг для быстрого поиска автора
-let quotes = []; // Обязательно объявляем массив глобально
 const DB_NAME = 'QuotesDB';
 const DB_VERSION = 1;
-const STORE_NAME = 'quotes';
+let db;
+let booksCache = []; // кэш книг для быстрого поиска автора
 
 // --- Элементы DOM (объявляем заранее, но используем после проверки) ---
 const modalEl = document.getElementById('modal');
@@ -22,30 +18,30 @@ function initDB() {
   const request = indexedDB.open(DB_NAME, DB_VERSION);
 
   request.onupgradeneeded = (e) => {
-    const db = e.target.result;
-    if (!db.objectStoreNames.contains(STORE_NAME)) {
-      db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+    const dbNew = e.target.result;
+    
+    if (!dbNew.objectStoreNames.contains('books')) {
+      const booksStore = dbNew.createObjectStore('books', { keyPath: 'title' });
+      booksStore.createIndex('author', 'author', { unique: false });
+    }
+    
+    if (!dbNew.objectStoreNames.contains('quotes')) {
+      const quotesStore = dbNew.createObjectStore('quotes', { autoIncrement: true });
+      quotesStore.createIndex('bookTitle', 'bookTitle', { unique: false });
     }
   };
 
   request.onsuccess = (e) => {
-    console.log('✅ База данных успешно открыта');
-    const db = e.target.result;
+    db = e.target.result;
+    console.log('База данных успешно открыта');
     
-    // Читаем все цитаты сразу при старте
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.getAll();
-
-    req.onsuccess = () => {
-      quotes = req.result; // ГЛАВНОЕ: записываем данные в глобальную переменную quotes
-      renderAll(); // И сразу рисуем
-    };
+    renderAll();
+    // ВАЖНО: слушатель вешаем только после того, как db инициализирована
+    setupEditListeners(); 
   };
 
-  request.onerror = (e) => console.error('❌ Ошибка открытия БД', e);
+  request.onerror = (e) => console.error('Ошибка БД:', e.target.error);
 }
-
 
 // Добавление или обновление книги + цитаты
 async function saveQuoteData(text, title, author, quoteIdToUpdate = null) {
@@ -117,35 +113,59 @@ function getQuotes(filterTitle, cb) {
 }
 
 
-function renderAll() {
-  const list = document.getElementById('quotes-list');
-  if (!list) return;
-  
-  list.innerHTML = ''; // Очищаем список
-  
-  // Если массив пуст, выходим
-  if (quotes.length === 0) {
-    list.innerHTML = '<li>Пока нет цитат. Добавь первую!</li>';
-    return;
-  }
+function renderAll(filterTitle = '') {
+  getBooks(books => {
+    booksCache = books;
 
-  quotes.forEach(quote => { // Важно: здесь переменная quote (единственное число)
-    const li = document.createElement('li');
-    
-    const textSpan = document.createElement('span');
-    textSpan.textContent = quote.text;
-    
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Редактировать';
-    editBtn.dataset.id = quote.id; // Вот тут мы вешаем ID
-    editBtn.onclick = () => openEditModal(quote.id);
-    
-    li.appendChild(textSpan);
-    li.appendChild(editBtn);
-    list.appendChild(li);
+    if (filterEl) {
+      filterEl.innerHTML = '<option value="">Все произведения</option>';
+      books.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.title;
+        opt.textContent = `${b.title} (${b.author})`;
+        filterEl.appendChild(opt);
+      });
+    }
+
+    getQuotes(filterTitle, quotes => {
+      const listEl = document.getElementById('quotes-list');
+      if (!listEl) return;
+      
+      listEl.innerHTML = '';
+
+      const authorMap = {};
+      books.forEach(b => authorMap[b.title] = b.author);
+
+      // Перемешивание (Shuffle)
+      for (let i = quotes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
+      }
+
+                       quotes.forEach(q => {
+        const li = document.createElement('li');
+        li.className = 'quote-card';
+        const author = authorMap[q.bookTitle] || 'Неизвестен';
+
+        // ✅ ВАЖНО: никаких \ перед $
+        li.innerHTML = `
+          <div class="quote-content">
+            <p class="quote-text">${escapeHtml(q.text)}</p>
+            <div class="book-info">${q.bookTitle} — ${author}</div>
+          </div>
+          <button type="button" class="edit-btn" data-id="${q.id}">✏️ Редактировать</button>
+        `;
+
+        listEl.appendChild(li);
+      });
+
+
+
+
+    });
   });
+  
 }
-
 
 // --- Настройка слушателей для редактирования ---
 function setupEditListeners() {
