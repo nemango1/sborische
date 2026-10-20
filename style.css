@@ -10,7 +10,108 @@
   --radius-sm: 8px;
   --radius-md: 12px;
 }
+/* =========================================
+   ЭКРАН ЗАСТАВКИ
+   ========================================= */
 
+#splash-screen {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg); /* Твой фиолетовый фон */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Поверх всего */
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Класс, который добавляется при клике на кнопку */
+#splash-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Начальное состояние элементов — скрыты */
+#splash-title,
+#splash-subtitle,
+#splash-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Задержки для последовательного появления */
+#splash-title {
+  animation-delay: 0.3s;
+  color: var(--text-main);
+  font-size: 2.2rem;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.5px;
+}
+
+/* Убираем декоративную полоску у заставки, чтобы не путалась */
+#splash-title::after {
+  display: none;
+}
+
+#splash-subtitle {
+  animation-delay: 1.2s;
+  color: var(--text-sec);
+  font-size: 1.2rem;
+  margin: 0 0 40px 0;
+  font-weight: 500;
+}
+
+#splash-btn {
+  animation-delay: 2.2s;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+#splash-btn:hover {
+  transform: translateY(-2px);
+  background: var(--text-main);
+}
+
+#splash-btn:active {
+  transform: scale(0.98);
+}
+
+/* Сама анимация появления */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Чтобы основной контент не мигал до появления заставки */
+body > header, 
+body > main {
+  opacity: 0;
+  transition: opacity 1s ease 0.2s;
+}
+
+body.ready > header,
+body.ready > main {
+  opacity: 1;
+}
 body {
   background-color: var(--bg);
   color: var(--text-main);

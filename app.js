@@ -380,4 +380,24 @@ if (booksModalEl) {
     if (e.target === booksModalEl) booksModalEl.classList.add('hidden');
   });
 }
+// --- Логика экрана приветствия ---
+const splashScreen = document.getElementById('splash-screen');
+const splashBtn = document.getElementById('splash-btn');
+
+if (splashScreen && splashBtn) {
+  // Добавляем класс ready, чтобы подготовить основной контент (он станет видимым после клика)
+  // Но он всё еще перекрыт заставкой, поэтому не виден.
+  
+  splashBtn.addEventListener('click', () => {
+    // Плавно скрываем заставку
+    splashScreen.classList.add('hidden');
+    
+    // Через 800мс (длительность анимации исчезновения) полностью удаляем её из DOM,
+    // чтобы она не мешала кликам, и показываем контент.
+    setTimeout(() => {
+      splashScreen.remove();
+      document.body.classList.add('ready');
+    }, 800); 
+  });
+}
 initDB();
