@@ -86,7 +86,7 @@ header h1::after {
 }
 
 #book-filter {
-  /* Стиль уже был, но добавим чуть больше воздуха внутри */
+  
   padding: 10px 14px;
   font-size: 1rem;
 }
@@ -208,7 +208,7 @@ header h1::after {
 .quote-text {
   margin: 0 0 14px 0;
   font-size: 1rem;
-  color: #411872; /* чуть темнее основного текста для контраста на белом */
+  color: #411872; 
   hyphens: auto;
 }
 
@@ -220,7 +220,7 @@ header h1::after {
   opacity: 0.9;
 }
 
-/* Модальное окно */
+
 .modal {
   position: fixed;
   inset: 0;
@@ -312,3 +312,174 @@ textarea:focus, input:focus {
   justify-content: space-between;
 }
 
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  padding: 0;
+  z-index: 2;
+}
+
+.delete-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #e53935;
+}
+
+.delete-btn:active {
+  transform: scale(0.92);
+}
+
+
+
+
+.filter-row #book-filter {
+  flex: 1;
+  min-width: 0;
+}
+.filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  
+  margin-bottom: 16px; 
+}
+.filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  
+  margin-bottom: 16px; 
+}
+
+
+
+.btn-gear {
+  flex: 0 0 auto;
+  width: 44px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  color: var(--accent); 
+  padding: 0;
+}
+
+.btn-gear:hover {
+  background: rgba(117, 76, 175, 0.08);
+  border-color: var(--accent);
+  color: var(--text-sec);
+}
+
+.btn-gear:active {
+  transform: scale(0.96);
+}
+
+.btn-gear:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 80, 197, 0.25);
+}
+
+/* Модалка управления произведениями */
+.modal-hint {
+  margin: 0 0 14px 0;
+  font-size: 0.9rem;
+  color: var(--text-sec);
+  opacity: 0.9;
+}
+
+.books-manage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid rgba(152, 128, 232, 0.35);
+  border-radius: var(--radius-sm);
+}
+
+.books-manage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(152, 128, 232, 0.2);
+}
+
+.books-manage-item:last-child {
+  border-bottom: none;
+}
+
+.books-manage-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.books-manage-title {
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.books-manage-author {
+  font-size: 0.82rem;
+  color: var(--text-sec);
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.books-manage-del {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.books-manage-del:hover {
+  background: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+}
+
+.books-manage-del:active {
+  transform: scale(0.9);
+}
+
+.books-manage-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-sec);
+  font-style: italic;
+}

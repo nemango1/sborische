@@ -21,14 +21,12 @@
     <main>
       
       <div class="controls-wrapper">
-        <div class="controls">
-          <label for="book-filter" class="filter-label">Фильтр по произведениям:</label>
-          <select id="book-filter">
-            <option value="">Все произведения</option>
-            
-          </select>
-
-          <div class="actions-group">
+       <div class="filter-row">
+  <select id="book-filter">
+    <option value="">Все произведения</option>
+  </select>
+  <button type="button" id="manage-books-btn" class="btn-gear" title="Управление произведениями" aria-label="Управление произведениями">⚒</button>
+</div>
            
             <a href="#" id="add-btn" class="btn-add">+ Добавить цитату</a>
           </div>
@@ -54,7 +52,16 @@
         </form>
       </div>
     </div>
-
+<div id="books-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Управление произведениями</h2>
+    <p class="modal-hint">Удаление произведения удалит и все его цитаты.</p>
+    <ul id="books-manage-list" class="books-manage-list"></ul>
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <button type="button" id="close-books-modal" class="btn-cancel" style="width: 100%;">Закрыть</button>
+    </div>
+  </div>
+</div>
     <script src="app.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
